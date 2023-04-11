@@ -1,0 +1,33 @@
+0x7E   : Date (23/03/2023) 64 hex digits
+0x9E   : Name (L. Tang) 128 hex digits
+0xDE   : Vehicle Name
+0x15E  : Track Name
+0x5DE  : ???
+0x6E6  : Copyright
+0x766  : Race Type (Time Trial)
+0xBE6  : ??? BA 13 [13 00: 19]
+0x13BA : Track Name Again ???
+0x1400 : ??? 70 E4 03
+0x1FE2 : ???
+0x200A : "Vehicle Speed"
+0x202A : "VehSpd" 00 "km/h"
+0x2086 : "G Force Long"
+0x20A6 : "G Long" 00 "G"
+
+0x 2636: SPEED [i16] (km/h)*10 (second column * 256)
+0x12636: G Force Long [i16] G*100
+0x22636: 
+0x32636: 
+0x42636: 
+0x52636: 
+0x62636: GEAR
+0x72636: ENG RPM (second column * 256)
+0x82636: Wheel Speed FL (km/h)
+0x92636: Wheel Speed FR (km/h)
+0xA2636: Wheel Speed RL (km/h)
+0xB2636: Wheel Speed RR (km/h)
+0xC2636: Steered Angle (degrees)
+
+## OTHER
+0x1400 - 0x1402 : Variant Data
+In Column Header Sector: 2 -- 2 -- 2 -- 2! (amount of data)
