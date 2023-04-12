@@ -1,5 +1,5 @@
 #[derive(Debug)]
-struct FileInfo {
+struct RaceData{
     device: String,
     date: String,
     time: String,
@@ -13,11 +13,12 @@ struct FileInfo {
 #[derive(Debug)]
 struct Column{
     name: String,
+    abbv: String,
     unit: String,
     startbyte: usize,
     nextbyte: usize,
     length: usize,
-    data: Vec<()>
+    data: Vec<i16>
 }
 
 fn main() {
@@ -25,13 +26,13 @@ fn main() {
         .expect("Failed to read file");
 
     // START OF FILE
-    let headerstart = get_i16(&data[8..12]);
-    let datastart = get_i16(&data[12..20]);
+    let headerstart = get_usize(&data[8..12]);
+    let datastart = get_usize(&data[12..20]);
     let _unknown = get_i16(&data[20..36]); //right b4 head
-    let racetypestart = get_i16(&data[36..44]) as usize;
+    let racetypestart = get_usize(&data[36..44]);
     let _unknown = get_i16(&data[44..74]); //bunch of bytes
 
-    let file = FileInfo {
+    let file = RaceData{
         device: get_utf8(&data[74..82]).to_string(),
         date: get_utf8(&data[92..126]).to_string(),
         time: get_utf8(&data[126..158]).to_string(),
@@ -41,19 +42,12 @@ fn main() {
         racetype: get_utf8(&data[racetypestart .. racetypestart+64]).to_string(),
         columns: Vec::new()
     };
-    //let device = get_utf8(&data[74..82]);
-    //let _UNKNOWN = get_utf8(&data[82..92]);
-    //let date = get_utf8(&data[92..126]);
-    //let time = get_utf8(&data[126..158]);
-    //let racer = get_utf8(&data[158..222]);
-    //let vehicle = get_utf8(&data[222..350]);
-    //let track = get_utf8(&data[350..478]); // unsure of length
-    dbg!(file);
+    dbg!(&headerstart);
 
 /* COLUMN HEADER NOTES
  * 0200 0100 D38702 (variant?)
  * [next entry] [data start] [num data]
- * 12001 0300 0200 3C (60) 0100 0100 0100
+ * 12001 0300 0200 [frequency] 0100 0100 0100
  *
  * [current entry] [next entry] [data start]
  * 01 [num data] "12002" 0300 0200
@@ -61,13 +55,8 @@ fn main() {
  */
     let trackstart = get_i16(&data[3046..3054]);
 
-    // HEADER
-
-
-    //dbg!(datastart,device,date,time,racer,vehicle);
-
-    let speed = shift(&vec_i16(&data[9782..10000]), 1);
-    //dbg!(speed);
+    // Jump from block to block to count
+    get_i16(&data[headerstart .. headerstart+4]);
 }
 
 fn vec_i16(data: &[u8]) -> Vec<i16> {
@@ -84,6 +73,11 @@ fn get_i16(data: &[u8]) -> i16 {
 fn get_utf8(slice: &[u8]) -> &str {
     core::str::from_utf8(slice).unwrap()
         .trim_matches(char::from(0))
+}
+
+fn get_usize(data: &[u8]) -> usize {
+    get_i16(data) as usize
+    //usize::from_le_bytes(data[index..index+8].try_into().unwrap())
 }
 
 fn shift(slice: &[i16], times: usize) -> Vec<String> {
