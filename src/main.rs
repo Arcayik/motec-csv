@@ -1,27 +1,54 @@
-struct Parameter {
+#[derive(Debug)]
+struct FileInfo {
+    device: String,
+    date: String,
+    time: String,
+    racer: String,
+    vehicle: String,
+    track: String,
+    racetype: String,
+    columns: Vec<Column>
+}
+
+#[derive(Debug)]
+struct Column{
+    name: String,
+    unit: String,
     startbyte: usize,
+    nextbyte: usize,
     length: usize,
+    data: Vec<()>
 }
 
 fn main() {
-    let data = std::fs::read("../data/old.ld")
+    let data = std::fs::read("data/old.ld")
         .expect("Failed to read file");
 
     // START OF FILE
     let headerstart = get_i16(&data[8..12]);
     let datastart = get_i16(&data[12..20]);
-    let _UNKNOWN = get_i16(&data[20..36]); //right b4 head
-    let racetypestart = get_i16(&data[36..44]);
-    let _UNKNOWN = get_i16(&data[44..74]); //bunch of bytes
+    let _unknown = get_i16(&data[20..36]); //right b4 head
+    let racetypestart = get_i16(&data[36..44]) as usize;
+    let _unknown = get_i16(&data[44..74]); //bunch of bytes
 
-    let device = get_utf8(&data[74..82]);
-    let _UNKNOWN = get_utf8(&data[82..92]);
-    let date = get_utf8(&data[92..126]);
-    let time = get_utf8(&data[126..158]);
-    let racer = get_utf8(&data[158..222]);
-    let vehicle = get_utf8(&data[222..350]);
-    let track = get_utf8(&data[350..478]); // unsure of length
-    dbg!(datastart, headerstart, racetypestart);
+    let file = FileInfo {
+        device: get_utf8(&data[74..82]).to_string(),
+        date: get_utf8(&data[92..126]).to_string(),
+        time: get_utf8(&data[126..158]).to_string(),
+        racer: get_utf8(&data[158..222]).to_string(),
+        vehicle: get_utf8(&data[222..350]).to_string(),
+        track: get_utf8(&data[350..478]).to_string(),
+        racetype: get_utf8(&data[racetypestart .. racetypestart+64]).to_string(),
+        columns: Vec::new()
+    };
+    //let device = get_utf8(&data[74..82]);
+    //let _UNKNOWN = get_utf8(&data[82..92]);
+    //let date = get_utf8(&data[92..126]);
+    //let time = get_utf8(&data[126..158]);
+    //let racer = get_utf8(&data[158..222]);
+    //let vehicle = get_utf8(&data[222..350]);
+    //let track = get_utf8(&data[350..478]); // unsure of length
+    dbg!(file);
 
 /* COLUMN HEADER NOTES
  * 0200 0100 D38702 (variant?)
