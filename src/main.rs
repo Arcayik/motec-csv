@@ -1,12 +1,15 @@
+mod export;
+
 #[derive(Debug)]
-struct RaceData{
+pub struct RaceData{
     device: String,
     date: String,
     time: String,
-    racer: String,
+    driver: String,
     vehicle: String,
     track: String,
     racetype: String,
+    comment: Option<String>,
     columns: Vec<Column>
 }
 
@@ -33,10 +36,11 @@ fn main() {
         device: get_utf8(&data[74..82]).to_string(),
         date: get_utf8(&data[92..126]).to_string(),
         time: get_utf8(&data[126..158]).to_string(),
-        racer: get_utf8(&data[158..222]).to_string(),
+        driver: get_utf8(&data[158..222]).to_string(),
         vehicle: get_utf8(&data[222..350]).to_string(),
         track: get_utf8(&data[350..478]).to_string(),
         racetype: get_utf8(&data[racetypestart .. racetypestart+64]).to_string(),
+        comment: None,
         columns: Vec::new()
     };
 
@@ -51,9 +55,9 @@ fn main() {
  */
     let trackstart = get_i16(&data[3046..3054]);
 
-    // Jump from block to block to count
     let mut blockstart = headerstart;
     let mut numblocks = 0;
+    // Jump from block to block to count
     loop {
         // Check for end of header section
         if blockstart == 0 { break; }
@@ -80,6 +84,9 @@ fn main() {
         // Get address of next block
         blockstart = get_usize32(&data[blockstart+4 .. blockstart+8]);
     }
+
+    export::export_csv(file)
+        .expect("Failed to export to csv");
 }
 
 fn vec_i16(data: &[u8]) -> Vec<i16> {
@@ -111,24 +118,35 @@ fn get_usize32(data: &[u8]) -> usize {
 }
 
 fn shift(slice: Vec<i16>, times: usize) -> Vec<String> {
-    //slice.into_iter()
-    //    .map(|x| { *x.to_string(); *x.insert(x.len(),'.') })
-    //    .collect::<Vec<&str>>()
     let mut out: Vec<String> = Vec::new();
-    //for num in slice {
-    //    let mut val = num.to_string();
-    //    val.insert(val.len()-times,'.');
-    //    val.push_str("0");
-    //    out.push(val);
-    //}
-    if times < 1 {
-        for num in slice {
-            out.push(num.to_string());
+    for num in slice {
+        let mut val = num.to_string();
+        // Check if negative
+        let negative: bool = match val.find('-') {
+            None => false,
+            Some(idx) => {
+                val.remove(idx);
+                true
+            }
+        };
+        // Insert decimal point
+        if times < val.len() {
+            val.insert(val.len()-times, '.');
+        } else {
+            for _ in 0..times { val.insert(0, '0') };
+            val.insert(1, '.');
         }
-    } else {
-        for num in slice {
-            out.push(format!("{:.6}",(num as f32 / (10*times) as f32).to_string()));
+        // Ensure at least two digits past decimal
+        if val.split_at(val.len()-times).1.len() < 2 {
+            val.push('0');
         }
+        // Readd '-' if negative
+        match negative {
+            true => val.insert(0, '-'),
+            false => continue,
+        };
+        // Push to output vector
+        out.push(val);
     }
     out
 }
