@@ -18,6 +18,7 @@ struct Column{
     name: String,
     abbv: String,
     unit: String,
+    freq: u16,
     data: Vec<String>
 }
 
@@ -53,7 +54,7 @@ fn main() {
  * 01 [num data] "12002" 0300 0200
  * [frequency] 0100 0100 0200
  */
-    let trackstart = get_i16(&data[3046..3054]);
+    //let trackstart = get_i16(&data[3046..3054]);
 
     let mut blockstart = headerstart;
     let mut numblocks = 0;
@@ -69,6 +70,7 @@ fn main() {
             name: get_utf8(&data[blockstart+32 .. blockstart+64]).to_string(),
             abbv: get_utf8(&data[blockstart+64 .. blockstart+72]).to_string(),
             unit: get_utf8(&data[blockstart+72 .. blockstart+80]).to_string(),
+            freq: get_i16(&data[blockstart+22 .. blockstart+24]) as u16,
             data: shift(
                 vec_i16(&data[datastart .. datastart+(numentries*2)]).to_owned(),
                 decimalshift)
@@ -84,6 +86,10 @@ fn main() {
         // Get address of next block
         blockstart = get_usize32(&data[blockstart+4 .. blockstart+8]);
     }
+
+    // Calculate Time and Distance Columns and Prepend them to Columns Array
+    // FOR NOW get data frequency from Vehicle Speed Column
+    let data_freq = file.columns[0].freq;
 
     export::export_csv(file)
         .expect("Failed to export to csv");
